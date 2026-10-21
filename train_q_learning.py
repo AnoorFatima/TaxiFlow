@@ -2,112 +2,59 @@
 import random
 import numpy as np
 from collections import defaultdict
-
 from taxi_environment import TaxiEnvironment
 
-
-# -----------------------------
-# 1. Configuration
-# -----------------------------
+# Settings
 EPISODES = 100
-LEARNING_RATE = 0.1
-DISCOUNT_FACTOR = 0.95
+ALPHA = 0.1
+GAMMA = 0.95
 EPSILON = 1.0
-EPSILON_MIN = 0.05
-EPSILON_DECAY = 0.97
 
-SEED = 42
+random.seed(42)
+np.random.seed(42)
 
-random.seed(SEED)
-np.random.seed(SEED)
+# Create environment and Q-table
+env = TaxiEnvironment()
+q_table = defaultdict(lambda: np.zeros(3))
+rewards = []
 
-
-# -----------------------------
-# 2. Initialize environment
-# -----------------------------
-env = TaxiEnvironment(
-    data_path="data/demand_by_zone_15min.csv",
-    total_taxis=100
-)
-
-# Q-table:
-# Each state maps to the estimated value of 3 actions.
-q_table = defaultdict(lambda: np.zeros(env.num_actions))
-
-
-# -----------------------------
-# 3. Train Q-learning agent
-# -----------------------------
-episode_rewards = []
-
-epsilon = EPSILON
-
-print("Starting Q-learning training...")
-
+# Train the agent
 for episode in range(EPISODES):
-
-    # Start from the beginning of the dataset.
-    state = env.reset(start_step=0)
-
-    total_reward = 0.0
+    state = env.reset()
+    total_reward = 0
     done = False
 
     while not done:
-
-        # Epsilon-greedy action selection
-        if random.random() < epsilon:
-            action = random.randrange(env.num_actions)
+        # Choose an action
+        if random.random() < EPSILON:
+            action = random.randrange(3)
         else:
             action = int(np.argmax(q_table[state]))
 
         next_state, reward, done, info = env.step(action)
 
-        # Q-learning update
-        old_value = q_table[state][action]
-
-        if done or next_state is None:
-            next_max = 0.0
+        # Update Q-value
+        if done:
+            future_reward = 0
         else:
-            next_max = float(np.max(q_table[next_state]))
+            future_reward = np.max(q_table[next_state])
 
-        q_table[state][action] = old_value + LEARNING_RATE * (
-            reward
-            + DISCOUNT_FACTOR * next_max
-            - old_value
+        q_table[state][action] += ALPHA * (
+            reward + GAMMA * future_reward - q_table[state][action]
         )
 
         state = next_state
         total_reward += reward
 
-    episode_rewards.append(total_reward)
-
-    epsilon = max(
-        EPSILON_MIN,
-        epsilon * EPSILON_DECAY
-    )
+    rewards.append(total_reward)
+    EPSILON = max(0.05, EPSILON * 0.97)
 
     if (episode + 1) % 10 == 0:
-        recent_average = np.mean(
-            episode_rewards[-10:]
-        )
+        print(f"Episode {episode + 1}: Reward = {total_reward:.2f}")
 
-        print(
-            f"Episode {episode + 1}/{EPISODES} | "
-            f"Reward: {total_reward:.2f} | "
-            f"Last 10 average: {recent_average:.2f} | "
-            f"Epsilon: {epsilon:.3f}"
-        )
-
-
-# -----------------------------
-# 4. Save trained Q-table
-# -----------------------------
+# Save the trained model
 states = list(q_table.keys())
-
-q_values = np.array(
-    [q_table[state] for state in states],
-    dtype=np.float64
-)
+q_values = np.array([q_table[s] for s in states])
 
 np.savez(
     "q_learning_model.npz",
@@ -115,20 +62,15 @@ np.savez(
     q_values=q_values
 )
 
-print("\nTraining completed.")
-print("Learned states:", len(states))
-print("Model saved to q_learning_model.npz")
-
-
-# -----------------------------
-# 5. Save episode rewards
-# -----------------------------
+# Save training rewards
 np.savetxt(
     "training_rewards.csv",
-    np.array(episode_rewards),
+    rewards,
     delimiter=",",
     header="total_reward",
     comments=""
 )
 
-print("Episode rewards saved to training_rewards.csv")
+print("Training completed.")
+print("Learned states:", len(states))
+print("Model saved to q_learning_model.npz")
