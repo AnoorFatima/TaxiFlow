@@ -1,0 +1,4 @@
+Policy,Intervals,Total Reward,Reward Per Interval,Estimated Pickups Served,Estimated Unmet Demand,Estimated Service Rate (%),Estimated Unmet Demand Rate (%),Repositioning Cost,Repositioning Cost Per Interval
+No repositioning,480,-3202960.0,-6672.833333333333,20860,644764,3.133901421823732,96.86609857817626,0.0,0.0
+Demand greedy,480,-3105758.0,-6470.329166666666,37220,628404,5.591745489946276,94.40825451005372,958.0,1.9958333333333333
+Q-learning,480,-3090520.0,-6438.583333333333,39699,625925,5.964177974351887,94.0358220256481,594.0,1.2375

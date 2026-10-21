@@ -1,0 +1,3 @@
+Comparison,Reward Difference,Reward Improvement (%),Served Estimate Difference,Served Estimate Improvement (%),Unmet Demand Difference,Unmet Demand Reduction (%),Repositioning Cost Difference
+Q-learning vs No repositioning,112440.0,3.510502784923945,18839,90.31160115052732,-18839,3.0097855174341976,594.0
+Q-learning vs Demand greedy,15238.0,0.49063706830989406,2479,6.660397635679742,-2479,0.39605384031633184,-364.0
